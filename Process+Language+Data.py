@@ -173,21 +173,12 @@ class ConllLine:
         self.tag=tag
         self.affectIndex=affectIndex
         self.relation=relation
-        self.children = []
-       self.FinalString=" "
-    def addChild(self, ci):
-        self.children.append(ci)
-    def update(self, other):
-        self.index = other.index
-        self.targetWord =other.targetWord
-        self.tag=other.tag
-        self.affectIndex=other.affectIndex
-        self.relation=other.relation   
+        self.FinalString=" "
+
 
 # In[6]:
 
 ConllList=[]
-treeList = []
 count = 1
 lineCount = 1
 for fname in FilesList:
@@ -195,7 +186,6 @@ for fname in FilesList:
     with open(fname) as f:
         contents = f.readlines()
         ConnlUnit=[]
-        t = {}
         for line in contents:
             lineCount=lineCount+1
             words = line.split("\t")
@@ -206,23 +196,11 @@ for fname in FilesList:
                 affectIndex = words[5]
                 relation = words[6]
                 ConnlUnit.append(ConllLine(index,targetWord,tag,affectIndex,relation))
-                if (len(t) < int(index)):
-                    t[index] = ConllLine(index,targetWord,tag,affectIndex,relation)
-                else:
-                    t[index].update( ConllLine(index,targetWord,tag,affectIndex,relation) )
-                if (int(index) < int(affectIndex)):
-                    t[affectIndex] = ConllLine(affectIndex,"","","","")
-                t[index].addChild(affectIndex)
-                
-            elif (len(words) == 0):
+            else:
                 ConllList.append(ConnlUnit)
                 ConnlUnit=[]
-                t = {}
                 count = count +1
-            else:
-                error("invalid line: %s\n" % line)
         ConllList.append(ConnlUnit)
-        treeList.append(deps)
 
 
 # In[7]:
@@ -236,14 +214,13 @@ print(lineCount)
 
 lineCount1 = 1
 sentences = []
-for (cU,t) in zip(ConllList,treeList):
+for cU in ConllList:
     ConnlUnit=[]
-    for (cl,tnode) in zip(cU,t):
+    for cl in cU:
         lineCount1=lineCount1+1
         AI = int(cl.affectIndex) - 1
         if(AI>=0):
             cl.FinalString = cl.targetWord + "_"+cl.tag + " "+ cl.relation.strip() + " "+ cU[AI].targetWord+"_"+cU[AI].tag
-            cl.FinalString += [(" %s %s_%s" % t[ci].relation+"Inv", t[ci].targetWord, t[ci].tag) for ci in tnode.children]
         else :
             cl.FinalString = cl.targetWord + "_"+cl.tag + " "+ cl.relation.strip()
         sentences.append(cl.FinalString)
